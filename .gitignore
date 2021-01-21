@@ -124,3 +124,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 docs/Untitled.drawio
+docs/.DS_Store
+.DS_Store
