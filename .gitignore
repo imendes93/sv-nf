@@ -126,3 +126,8 @@ dmypy.json
 docs/Untitled.drawio
 docs/.DS_Store
 .DS_Store
+
+work/
+results/
+.nextflow*
+pipeline_stats.txt*
