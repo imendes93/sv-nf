@@ -19,7 +19,6 @@ if __file__.endswith(".command.sh"):
         os.path.basename(__file__)))
     print("GRAPH: {}".format(GRAPH))
 
-
 def main(graph):
     # save graph as DOT file
     cli_view = ["vg",

@@ -23,6 +23,20 @@ if __file__.endswith(".command.sh"):
     print("VCF: {}".format(VCF))
     print("MAX_NODES: {}".format(MAX_NODES))
 
+
+def check(filename):
+    """
+    check if it's a skip file
+    """
+    with open(filename) as f:
+        try:
+            if 'skip' in f.read():
+                return False
+        except:
+            return True
+    return True
+
+
 def main(reference, vcf, max_nodes):
     """ Main executor of the vg construct template.
     Parameters
@@ -42,8 +56,10 @@ def main(reference, vcf, max_nodes):
     # reference and vcf files (1 or more)
     for reference_file in reference:
         cli += ["-r", reference_file]
+    # vcf file is optional
     for vcf_file in vcf:
-        cli += ["-v", vcf_file]
+        if check(vcf_file):
+            cli += ["-v", vcf_file]
 
     # nodes 
     cli += ["-m", max_nodes]

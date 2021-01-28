@@ -9,8 +9,18 @@ def helpMessage() {
     Inputs Options:
     --reference             Path expression to input FASTA reference.
                             Input type: path (default: $params.reference)
-    --vcf                   Path expression to input VCF.
-                            Input type: string (default: $params.sample_vcf)
+    --vcf                   Path expression to input VCF. Optional input.
+                            Input type: string (default: $params.vcf)
+    --vcf_index             Path expression to input VCF index. Required if --vcf.
+                            Input type: string (default: $params.vcf_index)
+    
+    --max_nodes             Limit the maximum allowable node sequence size.
+                            Nodes greater than this threshold will be divided.
+                            Input type: string or int (default: $params.max_nodes)
+    
+    --graphviz              Graphviz mode. Options: 'dot', 'neato', 'fdp', 'sfdp',
+                            'twopi' or 'circo'.
+                            Input type: string (default: $params.graphviz)
     """.stripIndent()
 }
 
@@ -29,6 +39,9 @@ IN_max_nodes = Channel.value(params.max_nodes)
 if (params.vcf){
     IN_vcf_raw = Channel.fromPath(params.vcf).ifEmpty { exit 1, "No vcf file provided with path:'${params.vcf}'" }
     IN_vcf_index_raw = Channel.fromPath(params.vcf_index).ifEmpty { exit 1, "No vcf index file provided with path:'${params.vcf_index}'" }
+} else {
+    IN_vcf_raw = Channel.from('skip')
+    IN_vcf_index_raw = Channel.from('skip')
 }
 
 process construct {
@@ -63,17 +76,27 @@ process view_construct {
 
 }
 
+def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp','twopi', 'circo'] as Set
+
+def parameter_diff = graphviz_mode_expected - params.graphviz
+if (parameter_diff.size() > 5){
+   exit 1, "[Pipeline error] Parameter $params.graphviz is not valid in the pipeline!\n"
+}
+
+IN_graphviz_mode = Channel.value(params.graphviz)
+
 process graphviz {
     
     publishDir "results/plots", pattern: "*.pdf"
 
     input:
     file(dotfile) from GRAPH_DOTFILE
+    val mode from IN_graphviz_mode
 
     output:
     file("*.pdf")
 
     script:
-    "neato -Tpdf -o graph.pdf ${dotfile}"
+    "${mode} -Tpdf -o graph.pdf ${dotfile}"
 
 }
