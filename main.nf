@@ -30,15 +30,15 @@ if (params.help) {
   exit 0
 }
 
-if (!params.reference && !params.vcf){exit 1, "'reference' or 'vcf' parameter missing"}
+if (!params.reference){exit 1, "[Pipeline error] 'reference' parameter missing"}
 
 // RAW INPUTS
-IN_referece_raw = Channel.fromPath(params.reference).ifEmpty { exit 1, "No reference file provided with path:'${params.reference}'" }
+IN_referece_raw = Channel.fromPath(params.reference).ifEmpty { exit 1, "[Pipeline error] No reference file provided with path:'${params.reference}'" }
 IN_max_nodes = Channel.value(params.max_nodes)
 
 if (params.vcf){
-    IN_vcf_raw = Channel.fromPath(params.vcf).ifEmpty { exit 1, "No vcf file provided with path:'${params.vcf}'" }
-    IN_vcf_index_raw = Channel.fromPath(params.vcf_index).ifEmpty { exit 1, "No vcf index file provided with path:'${params.vcf_index}'" }
+    IN_vcf_raw = Channel.fromPath(params.vcf).ifEmpty { exit 1, "[Pipeline error] No vcf file provided with path:'${params.vcf}'" }
+    IN_vcf_index_raw = Channel.fromPath(params.vcf_index).ifEmpty { exit 1, "[Pipeline error] No vcf index file provided with path:'${params.vcf_index}'" }
 } else {
     IN_vcf_raw = Channel.from('skip')
     IN_vcf_index_raw = Channel.from('skip')
@@ -76,14 +76,16 @@ process view_construct {
 
 }
 
-def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp','twopi', 'circo'] as Set
+// check graphviz parameters... in a hacky way
+def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp', 'twopi', 'circo'] as Set
 
 def parameter_diff = graphviz_mode_expected - params.graphviz
 if (parameter_diff.size() > 5){
-   exit 1, "[Pipeline error] Parameter $params.graphviz is not valid in the pipeline!\n"
+    println "[Pipeline warning] Parameter $params.graphviz is not valid in the pipeline! Running with default 'neato'\n"
+    IN_graphviz_mode = Channel.value('neato')
+} else {
+    IN_graphviz_mode = Channel.value(params.graphviz)
 }
-
-IN_graphviz_mode = Channel.value(params.graphviz)
 
 process graphviz {
     
