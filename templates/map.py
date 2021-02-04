@@ -20,6 +20,7 @@ if __file__.endswith(".command.sh"):
     FASTQ = "$params.fastq"
     GAM = "$params.gam"
     FASTA = "$params.fasta"
+    HTS = "$params.hts"
 
     print("Running {} with parameters:".format(
         os.path.basename(__file__)))
@@ -29,9 +30,10 @@ if __file__.endswith(".command.sh"):
     print("FASTQ: {}".format(FASTQ))
     print("GAM: {}".format(GAM))
     print("FASTA: {}".format(FASTA))
+    print("HTS: {}".format(HTS))
 
 
-def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None):
+def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None, hts=None):
     """ Main executor of the vg construct template.
     Parameters
     ----------
@@ -60,6 +62,8 @@ def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None):
         cli += ["-G", gam]
     if fasta != '':
         cli += ["-F", fasta]
+    if hts != '':
+        cli += ["-b", hts]
     
     print("Running fastqc subprocess with command: {}".format(cli))
 
@@ -84,4 +88,4 @@ def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None):
         vg_fh.write(stdout)
 
 if __name__ == '__main__':
-    main(XG, GCSA, SEQUENCE, FASTQ, GAM, FASTA)
+    main(XG, GCSA, SEQUENCE, FASTQ, GAM, FASTA, HTS)

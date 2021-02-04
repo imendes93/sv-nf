@@ -11,16 +11,13 @@ def helpMessage() {
     Construct Graph from reference:
     --reference             Path expression to input FASTA reference.
                             Input type: path (default: $params.reference)
-
     --vcf                   Path expression to input VCF. Optional input.
                             Input type: string (default: $params.vcf)
     --vcf_index             Path expression to input VCF index. Required if --vcf.
                             Input type: string (default: $params.vcf_index)
-    
     --max_nodes             Limit the maximum allowable node sequence size.
                             Nodes greater than this threshold will be divided.
                             Input type: string or int (default: $params.max_nodes)
-    
     --graphviz              Graphviz mode. Options: 'dot', 'neato', 'fdp', 'sfdp',
                             'twopi' or 'circo'.
                             Input type: string (default: $params.graphviz)
@@ -28,7 +25,21 @@ def helpMessage() {
     Use prebuilt Graph:
     --graph                 Path expression to input vg graph reference.
                             Input type: path (default $params.graph)
-    
+
+    Map sequences to Graph:
+    --gam                   Path to realign GAM input.
+                            Input type: path (default: $params.gam)
+    --sequence              Align a string to the graph in graph.vg using 
+                            partial order alignment.
+                            Input type: string (default: $params.sequence)
+    --fastq                 Path to fastq file, possibly compressed. Two files are 
+                            allowed, one for each mate.
+                            Input type: path (default: $params.fastq)
+    --fasta                 Path to FASTA file that may have multiple lines per 
+                            reference sequence.
+                            Input type: path (default: $params.fasta)
+    --hts                   Path to reads from htslib-compatible FILE (BAM/CRAM/SAM).
+                            Input type: path (default: $params.hts)
     
     """.stripIndent()
 }
