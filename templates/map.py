@@ -10,34 +10,28 @@ import subprocess
 from subprocess import PIPE
 
 __version__ = "0.0.1"
-__build__ = "28.01.2021"
-__template__ = "construct-nf"
+__build__ = "04.02.2021"
+__template__ = "map-nf"
 
 if __file__.endswith(".command.sh"):
-    REFERENCE = "$reference".split(' ')
-    VCF = "$vcf".split(' ')
-    MAX_NODES = "$max_nodes"
+    XG = "$xg"
+    GCSA = "$gcsa"
+    SEQUENCE = "$params.sequence"
+    FASTQ = "$params.fastq"
+    GAM = "$params.gam"
+    FASTA = "$params.fasta"
+
     print("Running {} with parameters:".format(
         os.path.basename(__file__)))
-    print("REFERENCE: {}".format(REFERENCE))
-    print("VCF: {}".format(VCF))
-    print("MAX_NODES: {}".format(MAX_NODES))
+    print("XG: {}".format(XG))
+    print("GCSA: {}".format(GCSA))
+    print("SEQUENCE: {}".format(SEQUENCE))
+    print("FASTQ: {}".format(FASTQ))
+    print("GAM: {}".format(GAM))
+    print("FASTA: {}".format(FASTA))
 
 
-def check(filename):
-    """
-    check if it's a skip file
-    """
-    with open(filename) as f:
-        try:
-            if 'skip' in f.read():
-                return False
-        except:
-            return True
-    return True
-
-
-def main(reference, vcf, max_nodes):
+def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None):
     """ Main executor of the vg construct template.
     Parameters
     ----------
@@ -51,18 +45,21 @@ def main(reference, vcf, max_nodes):
 
     # setting command line for vg construct
     cli = ["vg",
-           "construct"]
+           "map",
+           '-x',
+           xg,
+           '-g',
+           gcsa]
     
-    # reference and vcf files (1 or more)
-    for reference_file in reference:
-        cli += ["-r", reference_file]
-    # vcf file is optional
-    for vcf_file in vcf:
-        if check(vcf_file):
-            cli += ["-v", vcf_file]
-
-    # nodes 
-    cli += ["-m", max_nodes]
+    # sequence
+    if sequence != '':
+        cli += ["-s", sequence]
+    if fastq != '':
+        cli += ["-f"] + fastq.split(' ')
+    if gam != '':
+        cli += ["-G", gam]
+    if fasta != '':
+        cli += ["-F", fasta]
     
     print("Running fastqc subprocess with command: {}".format(cli))
 
@@ -82,9 +79,9 @@ def main(reference, vcf, max_nodes):
           "======================================\\n{}".format(stderr))
     print("Finished vg construct with return code: {}".format(p.returncode))
 
-    # save vg file
-    with open("reference.vg", "wb") as vg_fh:
+    # save gam file
+    with open("map.gam", "wb") as vg_fh:
         vg_fh.write(stdout)
 
 if __name__ == '__main__':
-    main(REFERENCE, VCF, MAX_NODES)
+    main(XG, GCSA, SEQUENCE, FASTQ, GAM, FASTA)

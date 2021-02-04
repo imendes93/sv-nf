@@ -7,8 +7,11 @@ def helpMessage() {
     nextflow run main.nf [Options]
     
     Inputs Options:
+
+    Construct Graph from reference:
     --reference             Path expression to input FASTA reference.
                             Input type: path (default: $params.reference)
+
     --vcf                   Path expression to input VCF. Optional input.
                             Input type: string (default: $params.vcf)
     --vcf_index             Path expression to input VCF index. Required if --vcf.
@@ -21,6 +24,12 @@ def helpMessage() {
     --graphviz              Graphviz mode. Options: 'dot', 'neato', 'fdp', 'sfdp',
                             'twopi' or 'circo'.
                             Input type: string (default: $params.graphviz)
+    
+    Use prebuilt Graph:
+    --graph                 Path expression to input vg graph reference.
+                            Input type: path (default $params.graph)
+    
+    
     """.stripIndent()
 }
 
@@ -30,75 +39,120 @@ if (params.help) {
   exit 0
 }
 
-if (!params.reference){exit 1, "[Pipeline error] 'reference' parameter missing"}
+if (params.reference){
 
-// RAW INPUTS
-IN_referece_raw = Channel.fromPath(params.reference).ifEmpty { exit 1, "[Pipeline error] No reference file provided with path:'${params.reference}'" }
-IN_max_nodes = Channel.value(params.max_nodes)
+    // RAW INPUTS
+    IN_referece_raw = Channel.fromPath(params.reference).ifEmpty { exit 1, "[Pipeline error] No reference file provided with path:'${params.reference}'" }
+    IN_max_nodes = Channel.value(params.max_nodes)
 
-if (params.vcf){
-    IN_vcf_raw = Channel.fromPath(params.vcf).ifEmpty { exit 1, "[Pipeline error] No vcf file provided with path:'${params.vcf}'" }
-    IN_vcf_index_raw = Channel.fromPath(params.vcf_index).ifEmpty { exit 1, "[Pipeline error] No vcf index file provided with path:'${params.vcf_index}'" }
+    if (params.vcf){
+        IN_vcf_raw = Channel.fromPath(params.vcf).ifEmpty { exit 1, "[Pipeline error] No vcf file provided with path:'${params.vcf}'" }
+        IN_vcf_index_raw = Channel.fromPath(params.vcf_index).ifEmpty { exit 1, "[Pipeline error] No vcf index file provided with path:'${params.vcf_index}'" }
+    } else {
+        IN_vcf_raw = Channel.from('skip')
+        IN_vcf_index_raw = Channel.from('skip')
+    }
+
+    process construct {
+
+        publishDir "results/graph", pattern: "*.vg" 
+
+        input:
+        file(reference) from IN_referece_raw.collect()
+        file(vcf) from IN_vcf_raw.collect()
+        file(vcf_index) from IN_vcf_index_raw.collect()
+        val max_nodes from IN_max_nodes
+
+        output:
+        file("*.vg") into OUT_CONSTRUCT
+
+        script:
+        template "construct.py"
+    }
+
+    OUT_CONSTRUCT.into{IN_GRAPH_VIEW; IN_INDEX}
+
+    process view_construct {
+        
+        publishDir "results/plots", pattern: "*.dot"
+        
+        input:
+        file(graph) from IN_GRAPH_VIEW
+
+        output:
+        file("*.dot") into GRAPH_DOTFILE optional true
+
+        script:
+        template "view_graph.py"
+
+    }
+
+    // check graphviz parameters... in a hacky way
+    def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp', 'twopi', 'circo'] as Set
+
+    def parameter_diff = graphviz_mode_expected - params.graphviz
+    if (parameter_diff.size() > 5){
+        println "[Pipeline warning] Parameter $params.graphviz is not valid in the pipeline! Running with default 'neato'\n"
+        IN_graphviz_mode = Channel.value('neato')
+    } else {
+        IN_graphviz_mode = Channel.value(params.graphviz)
+    }
+
+    process graphviz {
+        
+        publishDir "results/plots", pattern: "*.pdf"
+
+        // segmentation fault error in graphs to big
+        errorStrategy { task.exitStatus == 139 ? 'ignore' : 'retry' }
+
+        input:
+        file(dotfile) from GRAPH_DOTFILE
+        val mode from IN_graphviz_mode
+
+        output:
+        file("*.pdf")
+
+        script:
+        "${mode} -Tpdf -o graph.pdf ${dotfile}"
+
+    }
 } else {
-    IN_vcf_raw = Channel.from('skip')
-    IN_vcf_index_raw = Channel.from('skip')
+    IN_INDEX = Channel.fromPath(params.graph).ifEmpty { exit 1, "[Pipeline error] No reference file provided with path:'${params.graph}'" }
 }
 
-process construct {
+IN_KMER = Channel.value(params.kmer)
 
-    publishDir "results/construct", pattern: "*.vg" 
+
+process index {
+
+    publishDir "results/graph"
 
     input:
-    file(reference) from IN_referece_raw.collect()
-    file(vcf) from IN_vcf_raw.collect()
-    file(vcf_index) from IN_vcf_index_raw.collect()
-    val max_nodes from IN_max_nodes
+    file(graph) from IN_INDEX
+    val kmer from IN_KMER
 
     output:
-    file("*.vg") into OUT_CONSTRUCT
+    file("*.xg") into XG_FILE
+    file("*.gcsa") into GCSA_FILE
 
     script:
-    template "construct.py"
+    """
+    vg index -x graph.xg ${graph}
+    vg index -g graph.gcsa -k ${kmer} ${graph}
+    """
 }
 
-process view_construct {
-    
-    publishDir "results/plots", pattern: "*.dot"
-    
-    input:
-    file(graph) from OUT_CONSTRUCT
+process map {
 
-    output:
-    file("*.dot") into GRAPH_DOTFILE
-
-    script:
-    template "view_graph.py"
-
-}
-
-// check graphviz parameters... in a hacky way
-def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp', 'twopi', 'circo'] as Set
-
-def parameter_diff = graphviz_mode_expected - params.graphviz
-if (parameter_diff.size() > 5){
-    println "[Pipeline warning] Parameter $params.graphviz is not valid in the pipeline! Running with default 'neato'\n"
-    IN_graphviz_mode = Channel.value('neato')
-} else {
-    IN_graphviz_mode = Channel.value(params.graphviz)
-}
-
-process graphviz {
-    
-    publishDir "results/plots", pattern: "*.pdf"
+    publishDir "results/mapping"
 
     input:
-    file(dotfile) from GRAPH_DOTFILE
-    val mode from IN_graphviz_mode
+    file xg from XG_FILE
+    file gcsa from GCSA_FILE
 
     output:
-    file("*.pdf")
+    file("*.gam") into OUT_MAP
 
     script:
-    "${mode} -Tpdf -o graph.pdf ${dotfile}"
-
+    template "map.py"
 }
