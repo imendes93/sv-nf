@@ -153,12 +153,14 @@ process index {
     """
 }
 
+XG_FILE.into{ XG_FILE_1; XG_FILE_2; XG_FILE_3}
+
 process map {
 
     publishDir "results/mapping"
 
     input:
-    file xg from XG_FILE
+    file xg from XG_FILE_1
     file gcsa from GCSA_FILE
 
     output:
@@ -166,4 +168,35 @@ process map {
 
     script:
     template "map.py"
+}
+
+process pack {
+
+    publishDir "results/mapping"
+
+    input:
+    file xg from XG_FILE_2
+    file gam from OUT_MAP
+
+    output:
+    file("*.pack") into OUT_PACK
+
+    script:
+    "vg pack -x ${xg} -g ${gam} -o align.pack"
+}
+
+process call {
+
+    publishDir "results/mapping"
+
+    input:
+    file pack from OUT_PACK
+    file graph from XG_FILE_3
+
+    output:
+    file("*.vcf")
+
+    script:
+    "vg call -k ${pack} ${graph} > output.vcf"
+
 }
