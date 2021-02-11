@@ -170,33 +170,98 @@ process map {
     template "map.py"
 }
 
-process pack {
+if (params.augment) {
 
-    publishDir "results/mapping"
+    OUT_MAP.into{ OUT_MAP_1; OUT_MAP_2}
 
-    input:
-    file xg from XG_FILE_2
-    file gam from OUT_MAP
+    process pgconvert {
 
-    output:
-    file("*.pack") into OUT_PACK
+        input:
+        file graph from XG_FILE_2
 
-    script:
-    "vg pack -x ${xg} -g ${gam} -o align.pack"
-}
+        output:
+        file("graph.pg") into GRAPH_PG
 
-process call {
+        script:
+        "vg convert ${graph} -p > graph.pg"
 
-    publishDir "results/mapping"
+    }
 
-    input:
-    file pack from OUT_PACK
-    file graph from XG_FILE_3
+    process augment {
 
-    output:
-    file("*.vcf")
+        input:
+        file graph from GRAPH_PG
+        file gam from OUT_MAP_1
 
-    script:
-    "vg call -k ${pack} ${graph} > output.vcf"
+        output:
+        file("aug.pg") into GRAPH_AUG
 
+        script:
+        "vg augment ${graph} ${gam} > aug.pg"
+    }
+
+    GRAPH_AUG.into{ GRAPH_AUG_1; GRAPH_AUG_2 }
+
+    process pack_aug {
+
+        publishDir "results/mapping"
+
+        input:
+        file pg from GRAPH_AUG_1
+        file gam from OUT_MAP_2
+
+        output:
+        file("*.pack") into OUT_PACK
+
+        script:
+        "vg pack -x ${pg} -g ${gam} -o align.pack"
+    }
+
+    process call_aug {
+
+        publishDir "results/mapping"
+
+        input:
+        file pack from OUT_PACK
+        file pg from GRAPH_AUG_2
+
+        output:
+        file("*.vcf")
+
+        script:
+        "vg call -k ${pack} ${pg} > output.vcf"
+
+    }
+} else {
+
+    process pack {
+
+        publishDir "results/mapping"
+
+        input:
+        file xg from XG_FILE_2
+        file gam from OUT_MAP
+
+        output:
+        file("*.pack") into OUT_PACK
+
+        script:
+        "vg pack -x ${xg} -g ${gam} -o align.pack"
+    }
+
+    process call {
+
+        publishDir "results/mapping"
+
+        input:
+        file pack from OUT_PACK
+        file graph from XG_FILE_3
+
+        output:
+        file("*.vcf")
+
+        script:
+        "vg call -k ${pack} ${graph} > output.vcf"
+
+    }
 }
