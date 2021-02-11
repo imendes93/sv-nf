@@ -27,19 +27,29 @@ def helpMessage() {
                             Input type: path (default $params.graph)
 
     Map sequences to Graph:
+    --mapper                Mapping mode. Options: 'map', 'giraffe'.
+                            Input type: string (default: $params.mapper)
+    Compatible with vg map and vg giraffe:
     --gam                   Path to realign GAM input.
                             Input type: path (default: $params.gam)
+    --fastq                 Path to fastq file, possibly compressed. Two files are 
+                            allowed, one for each mate.
+    Compatible only with vg map:
     --sequence              Align a string to the graph in graph.vg using 
                             partial order alignment.
                             Input type: string (default: $params.sequence)
-    --fastq                 Path to fastq file, possibly compressed. Two files are 
-                            allowed, one for each mate.
-                            Input type: path (default: $params.fastq)
     --fasta                 Path to FASTA file that may have multiple lines per 
                             reference sequence.
                             Input type: path (default: $params.fasta)
     --hts                   Path to reads from htslib-compatible FILE (BAM/CRAM/SAM).
                             Input type: path (default: $params.hts)
+    
+    --kmer                  kmer size to index in the graph.
+                            Input type: int (default: $params.kmer)
+    
+    --augment               Add variation from aligned reads into the graph.
+                            Options: true, false. Input type: boolean
+                            (default: $params.augment)
     
     """.stripIndent()
 }
