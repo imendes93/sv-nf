@@ -155,6 +155,17 @@ process index {
 
 XG_FILE.into{ XG_FILE_1; XG_FILE_2; XG_FILE_3}
 
+
+def map_mode_expected = ['map', 'giraffe'] as Set
+
+def parameter_diff_map = map_mode_expected - params.mapper
+if (parameter_diff_map.size() > 1){
+    println "[Pipeline warning] Parameter $params.mapper is not valid in the pipeline! Running with default 'vg'\n"
+    mapper_mode = Channel.value('map')
+} else {
+    mapper_mode = Channel.value(params.mapper)
+}
+
 process map {
 
     publishDir "results/mapping"
@@ -162,6 +173,7 @@ process map {
     input:
     file xg from XG_FILE_1
     file gcsa from GCSA_FILE
+    val mapper from mapper_mode
 
     output:
     file("*.gam") into OUT_MAP

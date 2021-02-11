@@ -16,6 +16,7 @@ __template__ = "map-nf"
 if __file__.endswith(".command.sh"):
     XG = "$xg"
     GCSA = "$gcsa"
+    MAPPER = "$mapper"
     SEQUENCE = "$params.sequence"
     FASTQ = "$params.fastq"
     GAM = "$params.gam"
@@ -26,6 +27,7 @@ if __file__.endswith(".command.sh"):
         os.path.basename(__file__)))
     print("XG: {}".format(XG))
     print("GCSA: {}".format(GCSA))
+    print("MAPPER: {}".format(MAPPER))
     print("SEQUENCE: {}".format(SEQUENCE))
     print("FASTQ: {}".format(FASTQ))
     print("GAM: {}".format(GAM))
@@ -33,7 +35,7 @@ if __file__.endswith(".command.sh"):
     print("HTS: {}".format(HTS))
 
 
-def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None, hts=None):
+def main(xg, gcsa, mapper, sequence=None, fastq=None, gam=None, fasta=None, hts=None):
     """ Main executor of the vg construct template.
     Parameters
     ----------
@@ -44,26 +46,31 @@ def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None, hts=None):
     max_nodes : int or str
         Number of nodes that will be in the graph.
     """
-
+    
     # setting command line for vg construct
     cli = ["vg",
-           "map",
+           mapper,
            '-x',
            xg,
            '-g',
            gcsa]
     
-    # sequence
-    if sequence != '':
-        cli += ["-s", sequence]
+    # input sequence
+    if mapper == "map":
+        if sequence != '':
+            cli += ["-s", sequence]
+        if fasta != '':
+            cli += ["-F", fasta]
+        if hts != '':
+            cli += ["-b", hts]
+    else:
+        if sequence != '' or fasta != '' or hts != '':
+            print("giraffe mapper only allows fastq and gam files. ignoring options: {}, {}, {}".format(sequence, fasta, hts))
+    
     if fastq != '':
         cli += ["-f"] + fastq.split(' ')
     if gam != '':
         cli += ["-G", gam]
-    if fasta != '':
-        cli += ["-F", fasta]
-    if hts != '':
-        cli += ["-b", hts]
     
     print("Running fastqc subprocess with command: {}".format(cli))
 
@@ -77,15 +84,15 @@ def main(xg, gcsa, sequence=None, fastq=None, gam=None, fasta=None, hts=None):
     except (UnicodeDecodeError, AttributeError):
         stderr = str(stderr)
 
-    print("Finished vg construct subprocess with STDOUT:\\n"
-          "======================================\\n{}".format(stdout))
-    print("Fished vg construct subprocesswith STDERR:\\n"
-          "======================================\\n{}".format(stderr))
-    print("Finished vg construct with return code: {}".format(p.returncode))
+    print("Finished vg {} subprocess with STDOUT:\\n"
+          "======================================\\n{}".format(mapper, stdout))
+    print("Fished vg {} subprocesswith STDERR:\\n"
+          "======================================\\n{}".format(mapper, stderr))
+    print("Finished vg {} with return code: {}".format(mapper, p.returncode))
 
     # save gam file
     with open("map.gam", "wb") as vg_fh:
         vg_fh.write(stdout)
 
 if __name__ == '__main__':
-    main(XG, GCSA, SEQUENCE, FASTQ, GAM, FASTA, HTS)
+    main(XG, GCSA, MAPPER, SEQUENCE, FASTQ, GAM, FASTA, HTS)
