@@ -69,26 +69,26 @@ Two options are available to map sequences to the graph: **map** and **giraffe**
 Giraffe is a faster mapping algorythm with accuracy similar to vg map. 
 The graph provided can be augmented `--augment=true` so that variation from alignments can be embedded back into the graph.
 
-In comparison with the entire [vg](https://github.com/vgteam/vg toolkit, this is what it's implemented in the workflow:
+In comparison with the entire [vg](https://github.com/vgteam/vg) toolkit, this is what it's implemented in the workflow:
 ### Graph Construction
-[x] Construct a graph (vg construct)
-[ ] Construct a graph from an assembly of multiple sequences (vg msga)
-[ ] join graphs (vg join)
-[x] Augment a graph with new variants (vg augment) 
+    [x] Construct a graph (vg construct)
+    [ ] Construct a graph from an assembly of multiple sequences (vg msga)
+    [ ] join graphs (vg join)
+    [x] Augment a graph with new variants (vg augment) 
 
 ### Mapping sequences to graph
-[ ] Align a sequence to a graph (vg align) - local alignment
-[x] Align large sequence/lots of sequences to a graph (vg index + vg map) - global alignment
-[x] Align large sequence/lots of sequences to a graph (vg index + vg giraffe) - global alignment
+    [ ] Align a sequence to a graph (vg align) - local alignment
+    [x] Align large sequence/lots of sequences to a graph (vg index + vg map) - global alignment
+    [x] Align large sequence/lots of sequences to a graph (vg index + vg giraffe) - global alignment
 ### Call variants
-[x] call variants (vg pack + vg call)
-[ ] Call variants considering novel variants from the reads (a bit messy, need to test)
-[x] genotype known variants from a vcg (vg construct + vg index + vg pack + vg call)  (vg genotype) (not sure about the difference, need test)
-[ ] generate a vcf from a graph (or part of a graph if too big - might be useful for large ref graphs) (vg deconstruct)
+    [x] call variants (vg pack + vg call)
+    [ ] Call variants considering novel variants from the reads (a bit messy, need to test)
+    [x] genotype known variants from a vcg (vg construct + vg index + vg pack + vg call)  (vg genotype) (not sure about the difference, need test)
+    [ ] generate a vcf from a graph (or part of a graph if too big - might be useful for large ref graphs) (vg deconstruct)
 ### Misc
-[ ] simulate reads from graph (vg sim)
-[ ] generate kmers from graph (vg kmers)
-[ ] validate if graph is valid (vg validate)
+    [ ] simulate reads from graph (vg sim)
+    [ ] generate kmers from graph (vg kmers)
+    [ ] validate if graph is valid (vg validate)
 
 ## Publicly available Graph Reference Genomes
 ### Human
