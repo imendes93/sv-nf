@@ -248,7 +248,7 @@ if (params.augment) {
         file pg from GRAPH_AUG_2
 
         output:
-        file("*.vcf")
+        file("*.vcf") into OUT_VCF
 
         script:
         "vg call -k ${pack} ${pg} > output.vcf"
@@ -280,10 +280,24 @@ if (params.augment) {
         file graph from XG_FILE_3
 
         output:
-        file("*.vcf")
+        file("*.vcf") into OUT_VCF
 
         script:
         "vg call -k ${pack} ${graph} > output.vcf"
 
     }
+}
+
+process viva {
+
+    publishDir "results/MultiQC/"
+
+    input:
+    file vcf from OUT_VCF
+
+    output:
+    file("*.vcf")
+
+    script:
+    "viva --save_remotely -f ${vcf} -s html -o ."
 }
