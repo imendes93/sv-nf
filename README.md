@@ -5,12 +5,6 @@ Nextflow workflow for structural variants with graph data using [vg](https://git
 this workflow allows the build of a variation graph from a reference FASTA file and variants in a 
 VCF file, map reads to the graph and genotype those variants. Implements the [vg](https://github.com/vgteam/vg) toolkit.
 
-## Implementation
-A variation graph can be constructed (`--reference`, `--vcf` and `--vcf_index`) or a prebuilt graph can be provided (`--graph`).
-Two options are available to map sequences to the graph: **map** and **giraffe**. Map uses vg's default mapping algorythm. 
-Giraffe is a faster mapping algorythm with accuracy similar to vg map. 
-The graph provided can be augmented `--augment=true` so that variation from alignments can be embedded back into the graph.
-
 ## Requirements
 This workflow requires at least 4 cpus and 8GB of memory.
 
@@ -68,6 +62,33 @@ The typical command for running the pipeline is as follows:
 
 ## Run test
     nextflow run main.nf -profile test,<docker...>
+
+## Implementation
+A variation graph can be constructed (`--reference`, `--vcf` and `--vcf_index`) or a prebuilt graph can be provided (`--graph`).
+Two options are available to map sequences to the graph: **map** and **giraffe**. Map uses vg's default mapping algorythm. 
+Giraffe is a faster mapping algorythm with accuracy similar to vg map. 
+The graph provided can be augmented `--augment=true` so that variation from alignments can be embedded back into the graph.
+
+In comparison with the entire [vg](https://github.com/vgteam/vg toolkit, this is what it's implemented in the workflow:
+### Graph Construction
+[x] Construct a graph (vg construct)
+[ ] Construct a graph from an assembly of multiple sequences (vg msga)
+[ ] join graphs (vg join)
+[x] Augment a graph with new variants (vg augment) 
+
+### Mapping sequences to graph
+[ ] Align a sequence to a graph (vg align) - local alignment
+[x] Align large sequence/lots of sequences to a graph (vg index + vg map) - global alignment
+[x] Align large sequence/lots of sequences to a graph (vg index + vg giraffe) - global alignment
+### Call variants
+[x] call variants (vg pack + vg call)
+[ ] Call variants considering novel variants from the reads (a bit messy, need to test)
+[x] genotype known variants from a vcg (vg construct + vg index + vg pack + vg call)  (vg genotype) (not sure about the difference, need test)
+[ ] generate a vcf from a graph (or part of a graph if too big - might be useful for large ref graphs) (vg deconstruct)
+### Misc
+[ ] simulate reads from graph (vg sim)
+[ ] generate kmers from graph (vg kmers)
+[ ] validate if graph is valid (vg validate)
 
 ## Publicly available Graph Reference Genomes
 ### Human
