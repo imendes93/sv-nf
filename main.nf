@@ -342,7 +342,7 @@ process report {
 
     input:
     file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
-    file map_dot_plot from OUT_MAP_GRAPHVIZ
+    file vcf_file from IN_VCF_PROCESS
 
     output:
     file ("multiqc_report.html")
@@ -351,7 +351,7 @@ process report {
     """
     cp ${workflow.projectDir}/bin/* .
 
-    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', map_dot_plot='${map_dot_plot}'))"
+    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', vcf_file='${vcf_file}'))"
     mkdir MultiQC && mv report.html multiqc_report.html
 
     """
