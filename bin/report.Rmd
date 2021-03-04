@@ -62,5 +62,8 @@ chrom <- create.chromR(name='', vcf=vcf)
 chrom <- proc.chromR(chrom)
 
 plot(chrom)
+```
+
+```{r}
 chromoqc(chrom, dp.alpha=20)
 ```
