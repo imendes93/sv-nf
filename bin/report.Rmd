@@ -33,6 +33,7 @@ library(data.table)
 library(htmltools)
 library(stringr)
 library(dplyr)
+library(vcfR)
 library(kableExtra)
    })
 ```
@@ -56,14 +57,11 @@ Add text here lalalalalalalalalalalal
 Add text here lalalalalalalalalalalal
 
 # VCF
-```{r}
-vcf <- read.vcfR(params$vcf_file)
-chrom <- create.chromR(name='', vcf=vcf)
-chrom <- proc.chromR(chrom)
+## QC
+```{r, warnings = FALSE, echo = FALSE}
+vcf <- vcfR::read.vcfR(params$vcf_file)
+chrom <- vcfR::create.chromR(name='', vcf=vcf)
+chrom <- vcfR::proc.chromR(chrom)
 
-plot(chrom)
-```
-
-```{r}
-chromoqc(chrom, dp.alpha=20)
+vcfR::plot(chrom)
 ```
