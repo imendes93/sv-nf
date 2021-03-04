@@ -131,3 +131,4 @@ work/
 results/
 .nextflow*
 pipeline_stats.txt*
+.vscode/launch.json
