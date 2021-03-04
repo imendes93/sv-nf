@@ -91,7 +91,7 @@ if (params.reference){
         template "construct.py"
     }
 
-    OUT_CONSTRUCT.into{IN_GRAPH_VIEW; IN_INDEX}
+    OUT_CONSTRUCT.into{IN_GRAPH_VIEW; IN_INDEX_1; IN_INDEX_2; IN_GRAPH_MAP}
 
     process view_construct {
         
@@ -131,14 +131,15 @@ if (params.reference){
         val mode from IN_graphviz_mode
 
         output:
-        file("*.pdf")
+        file("*.png") into OUT_GRAPH_GRAPHVIZ
 
         script:
-        "${mode} -Tpdf -o graph.pdf ${dotfile}"
+        "${mode} -Tpng -o graph.png ${dotfile}"
 
     }
 } else {
     IN_INDEX = Channel.fromPath(params.graph).ifEmpty { exit 1, "[Pipeline error] No reference file provided with path:'${params.graph}'" }
+    IN_INDEX.into{IN_INDEX_1; IN_INDEX_2 }
 }
 
 IN_KMER = Channel.value(params.kmer)
@@ -149,7 +150,7 @@ process index {
     publishDir "results/graph"
 
     input:
-    file(graph) from IN_INDEX
+    file(graph) from IN_INDEX_1
     val kmer from IN_KMER
 
     output:
@@ -190,6 +191,53 @@ process map {
 
     script:
     template "map.py"
+}
+
+OUT_MAP.into{OUT_MAP_1; OUT_MAP_VIEW}
+
+process view_map {
+
+    publishDir "results/mapping"
+
+    input: 
+    file vg_graph from IN_INDEX_2
+    file gam from OUT_MAP_VIEW
+
+    output:
+    file("map.dot") into MAP_VIEW
+
+    script:
+    """
+    vg view -d ${vg_graph} -A ${gam} > map.dot
+    """
+}
+
+def graphviz_mode_expected = ['dot', 'neato', 'fdp', 'sfdp', 'twopi', 'circo'] as Set
+
+def parameter_diff = graphviz_mode_expected - params.graphviz
+if (parameter_diff.size() > 5){
+    println "[Pipeline warning] Parameter $params.graphviz is not valid in the pipeline! Running with default 'neato'\n"
+    IN_graphviz_map_mode = Channel.value('neato')
+} else {
+    IN_graphviz_map_mode = Channel.value(params.graphviz)
+}
+
+process graphviz_map {
+    
+    publishDir "results/plots", pattern: "*.png"
+
+    // segmentation fault error in graphs to big
+    errorStrategy { task.exitStatus == 139 ? 'ignore' : 'retry' }
+
+    input:
+    file(dotfile) from MAP_VIEW
+    val mode from IN_graphviz_map_mode
+
+    output:
+    file("*.png") into OUT_MAP_GRAPHVIZ
+
+    script:
+    "${mode} -Tpng -o map_graph.png ${dotfile}"
 }
 
 if (params.augment) {
@@ -248,7 +296,7 @@ if (params.augment) {
         file pg from GRAPH_AUG_2
 
         output:
-        file("*.vcf")
+        file("*.vcf") into IN_VCF_PROCESS
 
         script:
         "vg call -k ${pack} ${pg} > output.vcf"
@@ -280,10 +328,29 @@ if (params.augment) {
         file graph from XG_FILE_3
 
         output:
-        file("*.vcf") 
+        file("*.vcf") into IN_VCF_PROCESS
 
         script:
         "vg call -k ${pack} ${graph} > output.vcf"
 
     }
+}
+
+process report {
+
+    input:
+    file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
+    file map_dot_plot from OUT_MAP_GRAPHVIZ
+
+    output:
+    file ("MultiQC/multiqc_report.html")
+
+    script:
+    """
+    cp /opt/bin/* .
+
+    R -e "rmarkdown::render('report.Rmd', params = list(barplot='${graph_dot_plot}'))"
+    mkdir MultiQC && mv svnf_report.html MultiQC/multiqc_report.html
+
+    """
 }
