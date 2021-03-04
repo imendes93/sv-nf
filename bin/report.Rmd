@@ -34,7 +34,6 @@ library(htmltools)
 library(stringr)
 library(dplyr)
 library(kableExtra)
-library(sna)
    })
 ```
 

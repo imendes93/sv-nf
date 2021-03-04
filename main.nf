@@ -338,19 +338,21 @@ if (params.augment) {
 
 process report {
 
+    publishDir "results/MultiQC"
+
     input:
     file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
     file map_dot_plot from OUT_MAP_GRAPHVIZ
 
     output:
-    file ("MultiQC/multiqc_report.html")
+    file ("multiqc_report.html")
 
     script:
     """
-    cp /opt/bin/* .
+    cp ${workflow.projectDir}/bin/* .
 
-    R -e "rmarkdown::render('report.Rmd', params = list(barplot='${graph_dot_plot}'))"
-    mkdir MultiQC && mv svnf_report.html MultiQC/multiqc_report.html
+    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', map_dot_plot='${map_dot_plot}'))"
+    mkdir MultiQC && mv report.html multiqc_report.html
 
     """
 }
