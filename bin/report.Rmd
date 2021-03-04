@@ -11,7 +11,7 @@ output:
     css: 'style.css'
 params:
   graph_dot_plot: "graph.png"
-  map_dot_plot: "map_graph.png"
+  vcf_file: "output.vcf"
 title: "`r paste0('sv-nf Report' , '') `"
 author: ""
 date: ""
@@ -53,14 +53,14 @@ Add text here lalalalalalalalalalalal
 
 # Mapping
 
-```{r}
-figure_number  <- "Figure 2: "
-figure_caption <- "Graph Mapping"
-knitr::include_graphics(params$map_dot_plot, )
-htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; font-size: 85%%; color: #71879d',
-                            htmltools::em(figure_number),
-                            htmltools::em(figure_caption))
-```
 Add text here lalalalalalalalalalalal
 
 # VCF
+```{r}
+vcf <- read.vcfR(params$vcf_file)
+chrom <- create.chromR(name='', vcf=vcf)
+chrom <- proc.chromR(chrom)
+
+plot(chrom)
+chromoqc(chrom, dp.alpha=20)
+```

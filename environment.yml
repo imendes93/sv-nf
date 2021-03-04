@@ -18,9 +18,9 @@ dependencies:
   - conda-forge::r-dt=0.16
   - conda-forge::r-htmltools=0.5.0
   - conda-forge::r-kableextra=1.2.1
-
+  - conda-forge::r-tidygraph
   # bioconda channel packages second
-  
+  - bioconda::r-vcfr
   # defaults channel packages third
   - fonts-anaconda
 
