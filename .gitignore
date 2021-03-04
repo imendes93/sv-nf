@@ -132,3 +132,4 @@ results/
 .nextflow*
 pipeline_stats.txt*
 .vscode/launch.json
+templates/input_test.vcf
