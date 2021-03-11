@@ -321,7 +321,7 @@ if (params.augment) {
 
     process call {
 
-        publishDir "results/mapping"
+        publishDir "results/vcf"
 
         input:
         file pack from OUT_PACK
@@ -336,13 +336,33 @@ if (params.augment) {
     }
 }
 
+IN_VCF_PROCESS.into{ IN_VCF_PROCESS_1; IN_VCF_PROCESS_2}
+
+process bcftools {
+
+    publishDir "results/vcf"
+
+    input:
+    file vcf from N_VCF_PROCESS_1
+
+    output:
+    file("stats_vcf.txt") into OUT_BCF
+
+    script:
+    """
+    bcftools stats ${vcf} > stats.vchk
+    plot-vcfstats -p outdir file.vchk
+    """
+
+}
+
 process report {
 
     publishDir "results/MultiQC"
 
     input:
     file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
-    file vcf_file from IN_VCF_PROCESS
+    file vcf_file from IN_VCF_PROCESS_2
 
     output:
     file ("multiqc_report.html")
