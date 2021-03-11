@@ -124,17 +124,24 @@ if (params.reference){
         publishDir "results/plots", pattern: "*.pdf"
 
         // segmentation fault error in graphs to big
-        errorStrategy { task.exitStatus == 139 ? 'ignore' : 'retry' }
+        //errorStrategy { task.exitStatus == 139 ? 'ignore' : 'retry' }
 
         input:
         file(dotfile) from GRAPH_DOTFILE
+        file warning from Channel.fromPath("${workflow.projectDir}/resources/warning.png")
         val mode from IN_graphviz_mode
 
         output:
-        file("*.png") into OUT_GRAPH_GRAPHVIZ
+        file("graph.png") into OUT_GRAPH_GRAPHVIZ
 
         script:
-        "${mode} -Tpng -o graph.png ${dotfile}"
+        """
+        {
+            ${mode} -Tpng -o graph.png ${dotfile}
+        } || {
+            cp ${warning} graph.png
+        }
+        """
 
     }
 } else {
@@ -232,12 +239,20 @@ process graphviz_map {
     input:
     file(dotfile) from MAP_VIEW
     val mode from IN_graphviz_map_mode
+    file warning from Channel.fromPath("${workflow.projectDir}/resources/warning.png")
+
 
     output:
-    file("*.png") into OUT_MAP_GRAPHVIZ
+    file("map_graph.png") into OUT_MAP_GRAPHVIZ
 
     script:
-    "${mode} -Tpng -o map_graph.png ${dotfile}"
+    """
+        {
+            ${mode} -Tpng -o map_graph.png ${dotfile}
+        } || {
+            cp ${warning} map_graph.png
+        }
+        """
 }
 
 if (params.augment) {
@@ -343,17 +358,31 @@ process bcftools {
     publishDir "results/vcf"
 
     input:
-    file vcf from N_VCF_PROCESS_1
+    file vcf from IN_VCF_PROCESS_1
 
     output:
-    file("stats_vcf.txt") into OUT_BCF
+    file("stats*") into OUT_BCF
 
     script:
     """
     bcftools stats ${vcf} > stats.vchk
-    plot-vcfstats -p outdir file.vchk
     """
+}
 
+process vcfR {
+
+    input:
+    file vcf from IN_VCF_PROCESS_2
+
+    output:
+    file("vcf_base_stats.png") into OUT_VCRF_PLOT1
+
+    script:
+    """
+    cp ${workflow.projectDir}/bin/* .
+
+    process_vcf.R ${vcf}
+    """
 }
 
 process report {
@@ -362,7 +391,8 @@ process report {
 
     input:
     file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
-    file vcf_file from IN_VCF_PROCESS_2
+    file vcf_graph_1 from OUT_VCRF_PLOT1
+    file graph_map_plot from OUT_MAP_GRAPHVIZ
 
     output:
     file ("multiqc_report.html")
@@ -371,7 +401,7 @@ process report {
     """
     cp ${workflow.projectDir}/bin/* .
 
-    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', vcf_file='${vcf_file}'))"
+    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', vcf_graph_1='${vcf_graph_1}', graph_map='${graph_map_plot}'))"
     mkdir MultiQC && mv report.html multiqc_report.html
 
     """

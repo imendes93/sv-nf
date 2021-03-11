@@ -11,7 +11,8 @@ output:
     css: 'style.css'
 params:
   graph_dot_plot: "graph.png"
-  vcf_file: "output.vcf"
+  vcf_graph_1: "vcf_base_stats.png"
+  graph_map: "map_graph.png"
 title: "`r paste0('sv-nf Report' , '') `"
 author: ""
 date: ""
@@ -39,12 +40,37 @@ library(kableExtra)
 
 # Overview
 
-vg-nf integrates the [vg toolkit](https://github.com/vgteam/vg) to build of a variation graph from a reference FASTA file and call variants.
+<p align="center">
+  <img width="200" height="200" src="vg_logo.png">
+</p>
 
-# Graph Reference
+**[sv-nf](https://github.com/imendes93/sv-nf)** integrates the [vg toolkit](https://github.com/vgteam/vg) to build of a variation graph from a reference FASTA file
+map reads to the graph, and call variants in a VCF file.
+
+## sv-nf Workflow
+
+The [sv-nf](https://github.com/imendes93/sv-nf) process is sumarized in the following diagram: 
+<p align="center">
+  <img width="800" height="800" src="vg_diagram.png">
+</p>
+
+
+# Variant Calling
 
 ```{r}
 figure_number  <- "Figure 1: "
+figure_caption <- "VCF Stats"
+knitr::include_graphics(params$vcf_graph_1, )
+htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; font-size: 85%%; color: #71879d',
+                            htmltools::em(figure_number),
+                            htmltools::em(figure_caption))
+```
+
+# Reference
+
+## Graph Regerence
+```{r}
+figure_number  <- "Figure 2: "
 figure_caption <- "Graph Reference"
 knitr::include_graphics(params$graph_dot_plot, )
 htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; font-size: 85%%; color: #71879d',
@@ -52,20 +78,14 @@ htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; f
                             htmltools::em(figure_caption))
 ```
 
-Add text here lalalalalalalalalalalal
+## Mapping to Graph Reference 
 
-# Mapping
-
-Add text here lalalalalalalalalalalal
-
-# VCF
-
-## QC
-
-```{r, warnings = FALSE, echo = FALSE}
-vcf <- vcfR::read.vcfR(params$vcf_file)
-chrom <- vcfR::create.chromR(name='', vcf=vcf)
-chrom <- vcfR::proc.chromR(chrom)
-
-vcfR::plot(chrom)
+```{r}
+figure_number  <- "Figure 3: "
+figure_caption <- "Sequences mapped to graph reference"
+knitr::include_graphics(params$graph_map, )
+htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; font-size: 85%%; color: #71879d',
+                            htmltools::em(figure_number),
+                            htmltools::em(figure_caption))
 ```
+
