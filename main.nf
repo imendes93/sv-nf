@@ -369,6 +369,20 @@ process bcftools {
     """
 }
 
+process process_bcf_stats {
+
+    input:
+    file vcf_stats from OUT_BCF
+
+    output:
+    file("substitutions.csv") into SUBS_BCF
+    file("summary.txt") into SUM_BCF
+
+    script:
+    template "process_bcf.py"
+
+}
+
 process vcfR {
 
     input:
@@ -393,6 +407,8 @@ process report {
     file graph_dot_plot from OUT_GRAPH_GRAPHVIZ
     file vcf_graph_1 from OUT_VCRF_PLOT1
     file graph_map_plot from OUT_MAP_GRAPHVIZ
+    file substitutions from SUBS_BCF
+    file summary from SUM_BCF
 
     output:
     file ("multiqc_report.html")
@@ -401,7 +417,7 @@ process report {
     """
     cp ${workflow.projectDir}/bin/* .
 
-    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', vcf_graph_1='${vcf_graph_1}', graph_map='${graph_map_plot}'))"
+    R -e "rmarkdown::render('report.Rmd', params = list(graph_dot_plot='${graph_dot_plot}', vcf_graph_1='${vcf_graph_1}', substitutions_sum='${substitutions}', bcf_summary='${summary}', graph_map='${graph_map_plot}'))"
     mkdir MultiQC && mv report.html multiqc_report.html
 
     """

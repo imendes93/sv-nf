@@ -12,6 +12,8 @@ output:
 params:
   graph_dot_plot: "graph.png"
   vcf_graph_1: "vcf_base_stats.png"
+  substitutions_sum: "substitutions.csv"
+  bcf_summary: "summaty.txt"
   graph_map: "map_graph.png"
 title: "`r paste0('sv-nf Report' , '') `"
 author: ""
@@ -57,6 +59,8 @@ The [sv-nf](https://github.com/imendes93/sv-nf) process is sumarized in the foll
 
 # Variant Calling
 
+## Quality Control
+
 ```{r}
 figure_number  <- "Figure 1: "
 figure_caption <- "VCF Stats"
@@ -64,6 +68,18 @@ knitr::include_graphics(params$vcf_graph_1, )
 htmltools::tags$figcaption( style = 'caption-side: bottom; text-align: center; font-size: 85%%; color: #71879d',
                             htmltools::em(figure_number),
                             htmltools::em(figure_caption))
+```
+
+## Summary
+
+cat(readLines(params$bcf_summary), sep = '\n')
+```
+
+## Substitutions
+
+```{r}
+table   <- read.table(params$substitutions_sum, header = T, sep = ",")
+DTable(table)
 ```
 
 # Reference
